@@ -16,7 +16,8 @@ module.exports = (env, argv) => {
       filename: 'makeglb.js',
       library: 'MakeGLB',
       libraryTarget: 'umd',
-      umdNamedDefine: true
+      umdNamedDefine: true,
+      globalObject: 'typeof self !== \'undefined\' ? self : this'
     },
     devServer: {
       contentBase: path.join(__dirname, 'sample'),
