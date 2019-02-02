@@ -7,7 +7,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'makeglb.js',
     library: 'MakeGLB',
-    libraryTarget: 'umd'
+    libraryTarget: 'commonjs'
   },
   devServer: {
     contentBase: path.join(__dirname, 'sample'),
