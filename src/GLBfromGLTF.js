@@ -11,6 +11,8 @@ const JSON_HEADER = 0x4E4F534A
 const BIN_HEADER = 0x004E4942
 const LITTLE_ENDIAN = true
 
+import { TextEncoder } from 'util'
+
 const GLTF_MIME_TYPES = {
   'image/png': ['png'],
   'image/jpeg': ['jpg', 'jpeg'],
