@@ -11,8 +11,6 @@ const JSON_HEADER = 0x4E4F534A
 const BIN_HEADER = 0x004E4942
 const LITTLE_ENDIAN = true
 
-import { TextEncoder } from 'util'
-
 const GLTF_MIME_TYPES = {
   'image/png': ['png'],
   'image/jpeg': ['jpg', 'jpeg'],
@@ -154,6 +152,15 @@ const handleBinaryData = async (glb, fileBlobs) => {
   }
 }
 
+var jsonToArray = (json) => {
+  var str = JSON.stringify(json, null, 0);
+  var ret = new Uint8Array(str.length);
+  for (var i = 0; i < str.length; i++) {
+    ret[i] = str.charCodeAt(i);
+  }
+  return ret
+}
+
 export const GLBfromGLTF = async (gltf, fileBlobs) => {
   const glb = JSON.parse(JSON.stringify(gltf))
   const { bufferMap, bufferSize, buffers } = await handleBinaryData(glb, fileBlobs)
@@ -161,8 +168,7 @@ export const GLBfromGLTF = async (gltf, fileBlobs) => {
     byteLength: bufferSize,
   }]
 
-  const encoder = new TextEncoder()
-  const jsonBuffer = encoder.encode(JSON.stringify(glb))
+  const jsonBuffer = jsonToArray(glb)
   const jsonAlignedLength = calculateAlignedLength(jsonBuffer.length, 4)
   const jsonPadding = jsonAlignedLength - jsonBuffer.length
 

@@ -15,7 +15,7 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, 'dist'),
       filename: 'makeglb.js',
       library: 'MakeGLB',
-      libraryTarget: 'commonjs2',
+      libraryTarget: 'umd',
       globalObject: 'typeof self !== \'undefined\' ? self : this'
     },
     module: {
@@ -32,7 +32,6 @@ module.exports = (env, argv) => {
         }
       ]
     },
-    target: 'node',
     devServer: {
       contentBase: path.join(__dirname, 'sample'),
       hot: true,
