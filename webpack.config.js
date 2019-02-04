@@ -18,6 +18,20 @@ module.exports = (env, argv) => {
       libraryTarget: 'commonjs2',
       globalObject: 'typeof self !== \'undefined\' ? self : this'
     },
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          exclude: /(node_modules)/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              babelrc: true
+            }
+          }
+        }
+      ]
+    },
     target: 'node',
     devServer: {
       contentBase: path.join(__dirname, 'sample'),
