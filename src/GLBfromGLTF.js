@@ -152,11 +152,11 @@ const handleBinaryData = async (glb, fileBlobs) => {
   }
 }
 
-var jsonToArray = (json) => {
-  var str = JSON.stringify(json, null, 0);
-  var ret = new Uint8Array(str.length);
-  for (var i = 0; i < str.length; i++) {
-    ret[i] = str.charCodeAt(i);
+const jsonToArray = (json) => {
+  const str = JSON.stringify(json, null, 0)
+  const ret = new Uint8Array(str.length)
+  for (let i = 0; i < str.length; i++) {
+    ret[i] = str.charCodeAt(i)
   }
   return ret
 }
