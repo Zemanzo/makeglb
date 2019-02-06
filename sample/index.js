@@ -35,7 +35,7 @@ function addDownloadButton() {
 
 function processBuffers() {
   return new Promise(function (resolve) {
-    GLBfromGLTF(gltf, fileblobs)
+    MakeGLB.GLBfromGLTF(gltf, fileblobs)
       .then(function (arrayBuffer) {
         resolve(arrayBuffer)
       })
