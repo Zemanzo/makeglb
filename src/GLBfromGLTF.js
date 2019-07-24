@@ -107,51 +107,52 @@ const mimeTypeFromFilename = (filename) => {
   return 'application/octet-stream'
 }
 
-const scaleBuffers = async (resources, glbBufferCount, buffers, scalingInfo) => {
-  return new Promise((resolve, reject) => {
-    const scalingPromises = resources.map((resource, resourceIndex) => {
-      const mimeType = mimeTypeFromFilename(resource.uri)
-      if (SCALABLE_MIME_TYPES.indexOf(mimeType) >= 0) {
-        const bufferIndex = (glbBufferCount + resourceIndex - 1)
-        const image = sharp(buffers[bufferIndex].data)
+const scaleBuffers = async (resources, glbBufferCount, buffers, scalingInfo) => new Promise((resolve, reject) => {
+  const scalingPromises = resources.map((resource, resourceIndex) => {
+    const mimeType = mimeTypeFromFilename(resource.uri)
 
-        return new Promise((imageResolve, imageReject) => {
-          image.metadata().then((metadata) => {
+    if (SCALABLE_MIME_TYPES.indexOf(mimeType) >= 0) {
+      const bufferIndex = (glbBufferCount + resourceIndex - 1)
+      const image = sharp(buffers[bufferIndex].data)
+
+      return new Promise((imageResolve, imageReject) => {
+        image
+          .metadata()
+          .then((metadata) => {
             if (metadata.width <= scalingInfo.textureSize) {
-              imageReject(`image size (${metadata.width}) less than or equal to requested scaled size (${scalingInfo.textureSize})`)
+              imageReject(new Error(`image size (${metadata.width}) less than or equal to requested scaled size (${scalingInfo.textureSize})`))
               return
             }
 
             image
               .resize({ width: scalingInfo.textureSize, height: scalingInfo.textureSize })
               .toBuffer()
-              .then(data => {
-                imageResolve({ index: bufferIndex, data })
-              })
-              .catch(exception => {
-                imageReject(exception)
-              })
-          }).catch((exception) => {
-            imageReject(exception)
+              .then(data => imageResolve({ index: bufferIndex, data }))
+              .catch(exception => imageReject(exception))
           })
-        })
-      }
-      else {
-        return Promise.resolve()
-      }
-    })
+          .catch(exception => imageReject(exception))
+      })
+    }
 
-    Promise.all(scalingPromises).then(values => {
-      values.map(value => {
+    return Promise.resolve()
+  })
+
+  Promise.all(scalingPromises)
+    .then((values) => {
+      values.forEach((value) => {
         if (value) {
+          /* eslint-disable no-param-reassign */
           buffers[value.index].data = value.data
+          /* eslint-enable no-param-reassign */
         }
       })
 
       resolve(buffers)
     })
-  })
-}
+    .catch((_values) => {
+      reject()
+    })
+})
 
 const handleBinaryData = async (glb, fileBlobs, scalingInfo) => {
   let bufferOffset = 0
@@ -165,8 +166,7 @@ const handleBinaryData = async (glb, fileBlobs, scalingInfo) => {
   if (scalingInfo && resources) {
     try {
       buffers = await scaleBuffers(resources, glb.buffers.length, buffers, scalingInfo)
-    }
-    catch (e) {
+    } catch (e) {
       throw e
     }
   }
@@ -282,9 +282,7 @@ export const GLBfromGLTF = async (gltf, fileBlobs, scaleInfo) => {
     }
 
     return finalBuffer
-  }
-  catch (e) {
-    console.log(e)
+  } catch (e) {
     return null
   }
 }

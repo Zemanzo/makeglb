@@ -18,6 +18,11 @@ drop a gltf and related files on the drop area, or click download preconfigured 
 
 If updating or adding code, run `npm run lint`
 
+# scaling
+Run `node -r esm ./sample/convert.js` from the root to convert the sample gltf to 2k, 1k and 512 image resolutions
+
+Outputs are stored in `sample/data/output/`
+
 # original code is under /sample/legacy
 Convert glTF to glb
 
