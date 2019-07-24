@@ -19,6 +19,7 @@ module.exports = (env, argv) => {
       globalObject: 'typeof self !== \'undefined\' ? self : this'
     },
     externals: {
+      sharp: 'sharp',
       os: 'os',
       fs: 'fs'
     },
