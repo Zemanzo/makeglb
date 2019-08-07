@@ -1,10 +1,10 @@
 {
   "name": "makeglb",
-  "version": "1.3.5",
+  "version": "1.3.6",
   "description": "Convert glTF to glb",
   "main": "dist/makeglb.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node -r esm ./sample/convert.js",
     "build": "webpack --mode=production",
     "start:dev": "webpack-dev-server --open --mode=development",
     "lint": "yarn run eslint --ext .js --ext .jsx src sample/index.js"
@@ -33,8 +33,12 @@
     "eslint-plugin-import": "^2.13.0",
     "eslint-plugin-jsx-a11y": "^6.1.1",
     "eslint-plugin-react": "^7.10.0",
+    "esm": "^3.2.25",
     "webpack": "^4.28.3",
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.14"
+  },
+  "dependencies": {
+    "sharp": "^0.22.1"
   }
 }

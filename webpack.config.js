@@ -18,6 +18,11 @@ module.exports = (env, argv) => {
       libraryTarget: 'umd',
       globalObject: 'typeof self !== \'undefined\' ? self : this'
     },
+    externals: {
+      sharp: 'sharp',
+      os: 'os',
+      fs: 'fs'
+    },
     module: {
       rules: [
         {
