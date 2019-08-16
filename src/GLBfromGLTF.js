@@ -147,13 +147,12 @@ const scaleBuffers = async (resources, glbBufferCount, buffers, scalingInfo) => 
         }
       })
 
-      reject("ERRORRR")
-      //resolve(buffers)
+      resolve(buffers)
     })
     .catch((exception) => {
       console.log(`caught ${exception.message} while scaling`)
 
-      reject(eception)
+      reject(exception)
     })
 })
 
