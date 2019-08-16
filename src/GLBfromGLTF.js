@@ -147,7 +147,8 @@ const scaleBuffers = async (resources, glbBufferCount, buffers, scalingInfo) => 
         }
       })
 
-      resolve(buffers)
+      //resolve(buffers)
+      reject("ERRORRORORORROROROROOROROROROR")
     })
     .catch(exception) => {
       console.log(`caught ${exception.message} while scaling`)
@@ -169,6 +170,7 @@ const handleBinaryData = async (glb, fileBlobs, scalingInfo) => {
     try {
       buffers = await scaleBuffers(resources, glb.buffers.length, buffers, scalingInfo)
     } catch (e) {
+      console.log(e)
       throw e
     }
   }
@@ -285,7 +287,7 @@ export const GLBfromGLTF = async (gltf, fileBlobs, scaleInfo) => {
 
     return finalBuffer
   } catch (e) {
-    return null
+    throw e
   }
 }
 
