@@ -149,8 +149,8 @@ const scaleBuffers = async (resources, glbBufferCount, buffers, scalingInfo) => 
 
       resolve(buffers)
     })
-    .catch((_values) => {
-      reject()
+    .catch((exception) => {
+      reject(exception)
     })
 })
 
@@ -283,7 +283,7 @@ export const GLBfromGLTF = async (gltf, fileBlobs, scaleInfo) => {
 
     return finalBuffer
   } catch (e) {
-    return null
+    return { error: e }
   }
 }
 
