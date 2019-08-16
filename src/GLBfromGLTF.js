@@ -286,7 +286,7 @@ export const GLBfromGLTF = async (gltf, fileBlobs, scaleInfo) => {
 
     return finalBuffer
   } catch (e) {
-    return null
+    return { error: e }
   }
 }
 
