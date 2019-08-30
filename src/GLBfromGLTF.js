@@ -40,7 +40,7 @@ const downloadResources = async (resources, fileBlobs) => {
     })
   })
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     Promise.all(promises)
       .then((blobs) => {
         const embeds = resources.map((resource, index) => {
@@ -56,6 +56,7 @@ const downloadResources = async (resources, fileBlobs) => {
 
         resolve(embeds)
       })
+      .catch((exception) => reject())
   })
 }
 
