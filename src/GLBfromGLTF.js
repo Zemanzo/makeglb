@@ -1,7 +1,6 @@
 // reference
-// https://github.com/sbtron/makeglb/blob/master/index.html
+// https://github.com/sbtron/makegltf/blob/master/index.html
 // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#reference-image
-import sharp from 'sharp'
 
 const FILE_HEADER_LENGTH = 12
 const JSON_CHUNK_HEADER_LENGTH = 8
@@ -11,15 +10,6 @@ const GLTF_VERSION = 2
 const JSON_HEADER = 0x4E4F534A
 const BIN_HEADER = 0x004E4942
 const LITTLE_ENDIAN = true
-
-const GLTF_MIME_TYPES = {
-  'image/png': ['png'],
-  'image/jpeg': ['jpg', 'jpeg'],
-  'text/plain': ['glsl', 'vert', 'vs', 'frag', 'fs', 'txt'],
-  'image/vnd-ms.dds': ['dds'],
-}
-
-const SCALABLE_MIME_TYPES = ['image/png', 'image/jpeg']
 
 const downloadResources = async (resources, fileBlobs) => {
   const promises = resources.map((resource) => {
@@ -56,20 +46,20 @@ const downloadResources = async (resources, fileBlobs) => {
 
         resolve(embeds)
       })
-      .catch((exception) => reject())
+      .catch((exception) => reject(exception))
   })
 }
 
-const combineResources = (glb) => {
+const combineResources = (gltf) => {
   const resources = []
 
-  glb.buffers.forEach((buffer) => {
+  gltf.buffers.forEach((buffer) => {
     const { uri } = buffer
     resources.push({ type: 'buffer', uri })
   })
 
-  if (glb.images) {
-    glb.images.forEach((image) => {
+  if (gltf.images) {
+    gltf.images.forEach((image) => {
       const { uri } = image
       resources.push({ type: 'image', uri })
     })
@@ -89,91 +79,15 @@ const calculateAlignedLength = (bufferLength, alignment) => {
   return alignedLength
 }
 
-const mimeTypeFromFilename = (filename) => {
-  const mimeTypes = Object.keys(GLTF_MIME_TYPES)
-
-  for (let m = 0; m < mimeTypes.length; ++m) {
-    const mimeType = mimeTypes[m]
-
-    for (let e = 0; e < GLTF_MIME_TYPES[mimeType].length; ++e) {
-      const extension = GLTF_MIME_TYPES[mimeType][e]
-
-      if (filename.toLowerCase().indexOf(extension) > 0) {
-        return mimeType
-      }
-    }
-  }
-
-  // default
-  return 'application/octet-stream'
-}
-
-const scaleBuffers = async (resources, glbBufferCount, buffers, scalingInfo) => new Promise((resolve, reject) => {
-  const scalingPromises = resources.map((resource, resourceIndex) => {
-    const mimeType = mimeTypeFromFilename(resource.uri)
-
-    if (SCALABLE_MIME_TYPES.indexOf(mimeType) >= 0) {
-      const bufferIndex = (glbBufferCount + resourceIndex - 1)
-      const image = sharp(buffers[bufferIndex].data)
-
-      return new Promise((imageResolve, imageReject) => {
-        image
-          .metadata()
-          .then((metadata) => {
-            if (metadata.width <= scalingInfo.textureSize) {
-              imageReject(new Error(`image size (${metadata.width}) less than or equal to requested scaled size (${scalingInfo.textureSize})`))
-              return
-            }
-
-            image
-              .resize({ width: scalingInfo.textureSize, height: scalingInfo.textureSize })
-              .toBuffer()
-              .then(data => imageResolve({ index: bufferIndex, data }))
-              .catch(exception => imageReject(exception))
-          })
-          .catch(exception => imageReject(exception))
-      })
-    }
-
-    return Promise.resolve()
-  })
-
-  Promise.all(scalingPromises)
-    .then((values) => {
-      values.forEach((value) => {
-        if (value) {
-          /* eslint-disable no-param-reassign */
-          buffers[value.index].data = value.data
-          /* eslint-enable no-param-reassign */
-        }
-      })
-
-      resolve(buffers)
-    })
-    .catch((exception) => {
-      reject(exception)
-    })
-})
-
-const handleBinaryData = async (glb, fileBlobs, scalingInfo) => {
+const handleBinaryData = async (gltf, fileBlobs) => {
   let bufferOffset = 0
   const bufferMap = {}
 
-  const resources = combineResources(glb)
+  const resources = combineResources(gltf)
   let buffers = await downloadResources(resources, fileBlobs)
 
-  // if scaling info is provided, then we need to scale the image down before
-  // calculate the offset and aligned length
-  if (scalingInfo && resources) {
-    try {
-      buffers = await scaleBuffers(resources, glb.buffers.length, buffers, scalingInfo)
-    } catch (e) {
-      throw e
-    }
-  }
-
   /* eslint-disable no-param-reassign, array-callback-return */
-  glb.buffers.map((buffer, bufferIndex) => {
+  gltf.buffers.map((buffer, bufferIndex) => {
     delete buffer.uri
     buffer.byteLength = buffers[bufferIndex].data.byteLength
 
@@ -181,9 +95,9 @@ const handleBinaryData = async (glb, fileBlobs, scalingInfo) => {
     bufferOffset += calculateAlignedLength(buffers[bufferIndex].data.byteLength, 4)
   })
 
-  if (glb.images) {
-    glb.images.map((image, imageIndex) => {
-      const bufferIndex = glb.buffers.length + imageIndex
+  if (gltf.images) {
+    gltf.images.map((image, imageIndex) => {
+      const bufferIndex = gltf.buffers.length + imageIndex
 
       bufferMap[bufferIndex] = bufferOffset
 
@@ -195,11 +109,11 @@ const handleBinaryData = async (glb, fileBlobs, scalingInfo) => {
 
       bufferOffset += calculateAlignedLength(buffers[bufferIndex].data.byteLength, 4)
 
-      const bufferViewIndex = glb.bufferViews.length
-      glb.bufferViews.push(bufferView)
+      const bufferViewIndex = gltf.bufferViews.length
+      gltf.bufferViews.push(bufferView)
 
       image.bufferView = bufferViewIndex
-      image.mimeType = mimeTypeFromFilename(image.uri)
+      image.mimeType = image.mimeType
 
       delete image.uri
     })
@@ -222,16 +136,38 @@ const jsonToArray = (json) => {
   return ret
 }
 
-export const GLBfromGLTF = async (gltf, fileBlobs, scaleInfo) => {
-  const glb = JSON.parse(JSON.stringify(gltf))
+export const GLBfromGLTF = async (gltf, fileBlobs) => {
+  if (gltf instanceof ArrayBuffer) {
+    const utf8decoder = new TextDecoder("utf-8")
+    gltf = utf8decoder.decode(gltf)
+  } else if (typeof gltf !== "string") {
+    gltf = JSON.stringify(gltf)
+  }
+  gltf = JSON.parse(gltf)
 
   try {
-    const { bufferMap, bufferSize, buffers } = await handleBinaryData(glb, fileBlobs, scaleInfo)
-    glb.buffers = [{
+    let bufferMap, bufferSize, buffers
+    if (gltf.asset.version === "1.0") {
+     ({ bufferMap, bufferSize, buffers } = await handleBinaryData(gltf, fileBlobs))
+    }/* else if (gltf.asset.version === "2.0") {
+       debugger
+      bufferMap = gltf.buffers
+      bufferSize = gltf.buffers.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.byteLength
+      })
+      bufferMap = bufferMap.map((buffer) => {
+        const encoder = new TextEncoder()
+        buffer.uri = encoder.encode(buffer.uri)
+        return buffer
+      })
+    } */ else {
+      throw new Error(`Unsupported GLTF version (${gltf.asset.version})`)
+    }
+    gltf.buffers = [{
       byteLength: bufferSize,
     }]
 
-    const jsonBuffer = jsonToArray(glb)
+    const jsonBuffer = jsonToArray(gltf)
     const jsonAlignedLength = calculateAlignedLength(jsonBuffer.length, 4)
     const jsonPadding = jsonAlignedLength - jsonBuffer.length
 
@@ -287,5 +223,3 @@ export const GLBfromGLTF = async (gltf, fileBlobs, scaleInfo) => {
     return { error: e }
   }
 }
-
-export const BLOBfromGLB = arrayBuffer => new Blob([arrayBuffer], { type: 'model/json-binary' })
